@@ -3,8 +3,6 @@ package com.forge.ide.data
 import android.content.Context
 import com.forge.ide.core.backend.ForgeRuntime
 import com.forge.ide.core.backend.ForgeServerService
-import com.forge.ide.core.backendapi.FsRootResult
-import io.ktor.client.request.get
 import kotlinx.coroutines.flow.StateFlow
 
 /**

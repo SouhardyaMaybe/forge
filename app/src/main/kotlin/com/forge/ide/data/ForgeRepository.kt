@@ -36,7 +36,11 @@ class ForgeRepository(private val endpoint: StateFlow<ForgeRuntime.Endpoint?>) {
         val queryString = query.entries.joinToString("&") { (key, value) ->
             "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
         }
-        val url = if (queryString.isEmpty()) baseUrl() + path else "$baseUrl$path?$queryString"
+        val url = if (queryString.isEmpty()) {
+            baseUrl() + path
+        } else {
+            "${baseUrl()}$path?$queryString"
+        }
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = "GET"
             connectTimeout = CONNECT_TIMEOUT_MS
