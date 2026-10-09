@@ -1,6 +1,7 @@
 package com.forge.ide.core.backend
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
