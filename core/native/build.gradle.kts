@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         minSdk = 26
-        ndkVersion = "27.2.12479018"
+        ndkVersion = "27.0.12077973"
 
         externalNativeBuild {
             cmake {
