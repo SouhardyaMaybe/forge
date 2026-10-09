@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Forge</string>
+    <string name="backend_notification_channel_name">Forge server</string>
+    <string name="backend_notification_channel_desc">Keeps the Forge backend server and shell sessions alive.</string>
+    <string name="backend_notification_title">Forge server running</string>
+    <string name="backend_notification_text">Local server, terminals and builds stay alive in the background.</string>
+</resources>
