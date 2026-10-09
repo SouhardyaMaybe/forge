@@ -49,6 +49,13 @@ jobs:
 
       # The wrapper jar is not committed; the workflow materialises the wrapper
       # from the pinned Gradle version in gradle/wrapper/gradle-wrapper.properties.
+      - name: Report runner resources
+        run: |
+          echo "== CPUs ==" ; nproc
+          echo "== Memory ==" ; free -h
+          echo "== cgroup limit ==" ; cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo "unknown"
+          echo "== Disk ==" ; df -h / | tail -1
+
       - name: Generate Gradle wrapper
         run: |
           curl -sSLo /tmp/gradle.zip https://services.gradle.org/distributions/gradle-9.8.1-bin.zip
