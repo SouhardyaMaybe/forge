@@ -24,13 +24,22 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # The runner image ships an Android SDK at /usr/local/lib/android/sdk with
+      # cmdline-tools preinstalled. We drive sdkmanager ourselves: the
+      # android-actions/setup-android action still tries to install the removed
+      # legacy "tools" package and fails.
       - name: Install SDK components (platform 37, build-tools, cmake, NDK)
+        shell: bash
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platforms;android-37" "build-tools;37.0.0" "cmake;3.22.1" "ndk;27.2.12479018"
+          set -euo pipefail
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          SDKMANAGER="$(ls -1 "$ANDROID_SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -n 1)"
+          echo "Using sdkmanager at: $SDKMANAGER"
+          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platforms;android-37" "build-tools;37.0.0" "cmake;3.22.1" "ndk;27.2.12479018"
 
       # The wrapper jar is not committed; the workflow materialises the wrapper
       # from the pinned Gradle version in gradle/wrapper/gradle-wrapper.properties.
