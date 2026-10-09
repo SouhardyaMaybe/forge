@@ -1,10 +1,14 @@
 package com.forge.ide.core.backend
 
 import com.forge.ide.core.backendapi.FsListParams
+import com.forge.ide.core.backendapi.FsListResult
 import com.forge.ide.core.backendapi.FsReadParams
+import com.forge.ide.core.backendapi.FsReadResult
 import com.forge.ide.core.backendapi.FsRootResult
+import com.forge.ide.core.backendapi.GovernorStateParams
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.reflect.typeInfo
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
@@ -40,23 +44,29 @@ fun Application.forgeServerModule(services: BackendServices) {
         // remains the streaming surface (terminal output, agent events).
         get("/api/fs/list") {
             val path = call.request.queryParameters["path"]
-                ?: return@get call.respond(HttpStatusCode.BadRequest, "path is required")
+            if (path == null) {
+                call.respondText("path is required", status = HttpStatusCode.BadRequest)
+                return@get
+            }
             val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 1
-            call.respond(services.fileService.list(FsListParams(path, depth)))
+            call.respond(services.fileService.list(FsListParams(path, depth)), typeInfo<FsListResult>())
         }
 
         get("/api/fs/read") {
             val path = call.request.queryParameters["path"]
-                ?: return@get call.respond(HttpStatusCode.BadRequest, "path is required")
-            call.respond(services.fileService.read(FsReadParams(path)))
+            if (path == null) {
+                call.respondText("path is required", status = HttpStatusCode.BadRequest)
+                return@get
+            }
+            call.respond(services.fileService.read(FsReadParams(path)), typeInfo<FsReadResult>())
         }
 
         get("/api/fs/root") {
-            call.respond(FsRootResult(services.fileService.defaultRoot.path))
+            call.respond(FsRootResult(services.fileService.defaultRoot.path), typeInfo<FsRootResult>())
         }
 
         get("/api/governor") {
-            call.respond(services.governor.state.value)
+            call.respond(services.governor.state.value, typeInfo<GovernorStateParams>())
         }
 
         webSocket("/ws") {
