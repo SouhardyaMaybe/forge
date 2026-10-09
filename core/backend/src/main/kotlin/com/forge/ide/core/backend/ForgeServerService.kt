@@ -30,12 +30,14 @@ import java.security.SecureRandom
 class ForgeServerService : LifecycleService() {
 
     private var server: EmbeddedServer<*, *>? = null
+    private lateinit var services: BackendServices
     private val token: String = newToken()
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
+        services = BackendServices.create(this, lifecycleScope)
         startServer()
     }
 
@@ -47,7 +49,7 @@ class ForgeServerService : LifecycleService() {
     private fun startServer() {
         if (server != null) return
         val embedded = embeddedServer(CIO, host = LOCAL_HOST, port = 0) {
-            forgeServerModule()
+            forgeServerModule(services)
         }
         server = embedded
         lifecycleScope.launch {
@@ -66,6 +68,7 @@ class ForgeServerService : LifecycleService() {
     override fun onDestroy() {
         server?.stop(gracePeriodMillis = 250, timeoutMillis = 1_000)
         server = null
+        if (::services.isInitialized) services.shutdown()
         ForgeRuntime.onServerStopped()
         super.onDestroy()
     }

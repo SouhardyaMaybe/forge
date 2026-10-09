@@ -2,26 +2,26 @@ package com.forge.ide.core.backend
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.ktor.server.response.respondText
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
 /**
  * Backend HTTP/WS surface.
  *
- * Milestone M1 replaces the stub routes with the real fs / term / build /
- * agent methods defined by [com.forge.ide.core.backendapi.Methods]. Everything
- * is behind the loopback interface with a per-boot bearer token; the token is
- * minted in [ForgeServerService] and published through [ForgeRuntime].
+ * `GET /health`      → liveness probe (used by the UI and the watchdog)
+ * `WS   /ws`         → the protocol connection: requests in, events out
+ *
+ * Events are broadcast to every connected client; per-session routing arrives
+ * with the agent host in M3, when more than one panel needs private streams.
  */
-fun Application.forgeServerModule() {
+fun Application.forgeServerModule(services: BackendServices) {
     install(WebSockets)
 
     routing {
@@ -30,32 +30,35 @@ fun Application.forgeServerModule() {
         }
 
         webSocket("/ws") {
+            val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+
             // Welcome frame carries the protocol version so a mismatched UI can
             // fail fast instead of hanging.
-            val welcome = buildJsonObject {
-                put("event", "welcome")
-                put("protocol", 1)
-            }
-            send(Frame.Text(welcome.toString()))
+            send(
+                Frame.Text(
+                    json.encodeToString(
+                        com.forge.ide.core.backendapi.Event.serializer(),
+                        com.forge.ide.core.backendapi.Event(
+                            seq = services.eventBus.currentSeq(),
+                            name = "welcome",
+                        ),
+                    ),
+                ),
+            )
 
-            // Echo stub: proves the transport end-to-end. M1 dispatches frames
-            // through the request/event router instead.
-            for (frame in incoming) {
-                if (frame is Frame.Text) {
-                    val echo = buildJsonObject {
-                        put("event", "echo")
-                        put("data", frame.readText().take(4096))
+            val pump = launch {
+                EventStreamBridge(services.eventBus).pump { envelope -> send(envelope) }
+            }
+
+            try {
+                for (frame in incoming) {
+                    if (frame is Frame.Text) {
+                        services.router.handle({ envelope -> send(envelope) }, frame.readText())
                     }
-                    send(Frame.Text(echo.toString()))
                 }
+            } finally {
+                pump.cancel()
             }
         }
     }
 }
-
-/** Tiny helper so future routes share one JSON style. */
-internal fun jsonEvent(name: String, payload: JsonObject = JsonObject(emptyMap())): JsonObject =
-    buildJsonObject {
-        put("event", name)
-        payload.forEach { (key, value) -> put(key, value) }
-    }
