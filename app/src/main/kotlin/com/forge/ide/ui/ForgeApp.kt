@@ -1,5 +1,16 @@
 package com.forge.ide.ui
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
@@ -12,14 +23,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.lifecycle.compose.dropUnlessResumed
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.NavDisplay
 import com.forge.ide.ui.screens.AboutScreen
@@ -44,6 +51,34 @@ private data class TopLevelDestination(
     val label: String,
     val icon: ImageVector,
 )
+
+/**
+ * Cascade transition: the incoming pane travels in and scales up while the
+ * outgoing pane drifts away and fades out — the layers move in sequence rather
+ * than cross-fading, which keeps orientation clear on a small screen.
+ */
+private const val CASCADE_MS = 320
+
+private val cascadeEasing = FastOutSlowInEasing
+
+private val cascadeEnter: EnterTransition =
+    slideInHorizontally(tween(CASCADE_MS, easing = cascadeEasing)) { fullWidth -> fullWidth / 3 } +
+        fadeIn(tween(CASCADE_MS)) +
+        scaleIn(tween(CASCADE_MS, easing = cascadeEasing), initialScale = 0.94f)
+
+private val cascadeExit: ExitTransition =
+    slideOutHorizontally(tween(CASCADE_MS, easing = cascadeEasing)) { fullWidth -> -fullWidth / 6 } +
+        fadeOut(tween(CASCADE_MS / 2)) +
+        scaleOut(tween(CASCADE_MS, easing = cascadeEasing), targetScale = 0.96f)
+
+private val cascadePopEnter: EnterTransition =
+    slideInHorizontally(tween(CASCADE_MS, easing = cascadeEasing)) { fullWidth -> -fullWidth / 6 } +
+        fadeIn(tween(CASCADE_MS))
+
+private val cascadePopExit: ExitTransition =
+    slideOutHorizontally(tween(CASCADE_MS, easing = cascadeEasing)) { fullWidth -> fullWidth / 3 } +
+        fadeOut(tween(CASCADE_MS / 2)) +
+        scaleOut(tween(CASCADE_MS, easing = cascadeEasing), targetScale = 0.96f)
 
 @Composable
 fun ForgeApp() {
@@ -80,6 +115,9 @@ fun ForgeApp() {
             backStack = backStack,
             onBack = { backStack.removeLastOrNull() },
             modifier = Modifier.padding(innerPadding),
+            transitionSpec = { cascadeEnter togetherWith cascadeExit },
+            popTransitionSpec = { cascadePopEnter togetherWith cascadePopExit },
+            predictivePopTransitionSpec = { cascadePopEnter togetherWith cascadePopExit },
             entryProvider = { key ->
                 when (key) {
                     is HomeRoute -> NavEntry(key) { HomeScreen() }
