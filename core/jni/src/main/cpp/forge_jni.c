@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/waitpid.h>
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
