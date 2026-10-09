@@ -25,6 +25,7 @@ import androidx.navigation3.ui.NavDisplay
 import com.forge.ide.ui.screens.AboutScreen
 import com.forge.ide.ui.screens.FilesScreen
 import com.forge.ide.ui.screens.HomeScreen
+import com.forge.ide.ui.screens.PlaceholderScreen
 import com.forge.ide.ui.screens.TerminalScreen
 
 // ---------------------------------------------------------------------------
