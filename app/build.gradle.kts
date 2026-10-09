@@ -60,12 +60,6 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-    implementation(platform(libs.ktor.bom))
-    implementation(libs.ktor.client.core)
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
 
