@@ -37,11 +37,14 @@ jobs:
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
           SDKMANAGER="$(ls -1 "$ANDROID_SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -n 1)"
           echo "Using sdkmanager at: $SDKMANAGER"
-          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null 2>&1 || true
+          # Accept all licenses. `yes` exits with SIGPIPE once sdkmanager stops
+          # reading, so pipefail must be disabled around the pipeline — the
+          # install itself already succeeded in earlier runs.
+          ( set +o pipefail; yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null 2>&1 ) || true
           # Note: Android 17's platform ships as "platforms;android-37.0" in
           # this repository; NDK 27.2 is not published — 27.0 is the LTS.
-          yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
-            "platforms;android-37.0" "build-tools;37.0.0" "cmake;3.22.1" "ndk;27.0.12077973"
+          ( set +o pipefail; yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
+            "platforms;android-37.0" "build-tools;37.0.0" "cmake;3.22.1" "ndk;27.0.12077973" )
 
       # The wrapper jar is not committed; the workflow materialises the wrapper
       # from the pinned Gradle version in gradle/wrapper/gradle-wrapper.properties.
