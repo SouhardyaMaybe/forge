@@ -1,12 +1,16 @@
 package com.forge.ide.core.backend
 
-import com.forge.ide.core.backendapi.Event
 import com.forge.ide.core.backendapi.FsDeleteParams
 import com.forge.ide.core.backendapi.FsListParams
+import com.forge.ide.core.backendapi.FsListResult
 import com.forge.ide.core.backendapi.FsMkdirParams
+import com.forge.ide.core.backendapi.FsOpResult
 import com.forge.ide.core.backendapi.FsReadParams
+import com.forge.ide.core.backendapi.FsReadResult
 import com.forge.ide.core.backendapi.FsRenameParams
 import com.forge.ide.core.backendapi.FsWriteParams
+import com.forge.ide.core.backendapi.FsWriteResult
+import com.forge.ide.core.backendapi.GovernorStateParams
 import com.forge.ide.core.backendapi.Methods
 import com.forge.ide.core.backendapi.ProtocolError
 import com.forge.ide.core.backendapi.Request
@@ -14,11 +18,13 @@ import com.forge.ide.core.backendapi.Response
 import com.forge.ide.core.backendapi.TermCloseParams
 import com.forge.ide.core.backendapi.TermInputParams
 import com.forge.ide.core.backendapi.TermOpenParams
+import com.forge.ide.core.backendapi.TermOpenResult
 import com.forge.ide.core.backendapi.TermResizeParams
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
 /**
@@ -59,39 +65,39 @@ class WsRouter(
         Methods.HEALTH -> buildJsonObject { put("status", "ok") }
 
         Methods.FS_LIST -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.FsListResult.serializer(),
+            FsListResult.serializer(),
             fileService.list(json.decodeFromJsonElement(FsListParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.FS_READ -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.FsReadResult.serializer(),
+            FsReadResult.serializer(),
             fileService.read(json.decodeFromJsonElement(FsReadParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.FS_WRITE -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.FsWriteResult.serializer(),
+            FsWriteResult.serializer(),
             fileService.write(json.decodeFromJsonElement(FsWriteParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.FS_DELETE -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.FsOpResult.serializer(),
+            FsOpResult.serializer(),
             fileService.delete(json.decodeFromJsonElement(FsDeleteParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.FS_MKDIR -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.FsOpResult.serializer(),
+            FsOpResult.serializer(),
             fileService.mkdir(json.decodeFromJsonElement(FsMkdirParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.FS_RENAME -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.FsOpResult.serializer(),
+            FsOpResult.serializer(),
             fileService.rename(json.decodeFromJsonElement(FsRenameParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.TERM_OPEN -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.TermOpenResult.serializer(),
+            TermOpenResult.serializer(),
             terminalService.open(json.decodeFromJsonElement(TermOpenParams.serializer(), request.params)),
-        )
+        ).jsonObject
 
         Methods.TERM_INPUT -> {
             terminalService.input(json.decodeFromJsonElement(TermInputParams.serializer(), request.params))
@@ -109,9 +115,9 @@ class WsRouter(
         }
 
         Methods.GOVERNOR_STATE -> json.encodeToJsonElement(
-            com.forge.ide.core.backendapi.GovernorStateParams.serializer(),
+            GovernorStateParams.serializer(),
             governor.state.value,
-        )
+        ).jsonObject
 
         Methods.BUILD_START, Methods.BUILD_CANCEL ->
             throw NotImplementedMethod("build orchestration lands in milestone M1b")

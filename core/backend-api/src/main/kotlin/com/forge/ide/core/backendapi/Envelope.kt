@@ -72,6 +72,7 @@ object Methods {
 /** Well-known event names. */
 object Events {
     const val TERM_OUTPUT = "term.output"
+    const val TERM_EXIT = "term.exit"
     const val BUILD_PROGRESS = "build.progress"
     const val BUILD_FINISHED = "build.finished"
     const val AGENT_EVENT = "agent.event"
