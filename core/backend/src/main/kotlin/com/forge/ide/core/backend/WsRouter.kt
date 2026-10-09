@@ -131,10 +131,3 @@ class WsRouter(
 
     private class NotImplementedMethod(message: String) : Exception(message)
 }
-
-/** Bridge that pumps [EventBus] events into one WebSocket connection. */
-class EventStreamBridge(private val eventBus: EventBus) {
-    suspend fun pump(send: suspend (Envelope) -> Unit) {
-        eventBus.events.collect { event: Event -> send(event) }
-    }
-}

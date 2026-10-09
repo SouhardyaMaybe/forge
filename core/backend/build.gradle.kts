@@ -19,6 +19,7 @@ android {
 
 dependencies {
     implementation(project(":core:backend-api"))
+    implementation(project(":core:jni"))
 
     implementation(libs.androidx.lifecycle.service)
 

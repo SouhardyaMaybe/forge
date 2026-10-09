@@ -47,7 +47,16 @@ fun Application.forgeServerModule(services: BackendServices) {
             )
 
             val pump = launch {
-                EventStreamBridge(services.eventBus).pump { envelope -> send(envelope) }
+                services.eventBus.events.collect { event ->
+                    send(
+                        Frame.Text(
+                            json.encodeToString(
+                                com.forge.ide.core.backendapi.Event.serializer(),
+                                event,
+                            ),
+                        ),
+                    )
+                }
             }
 
             try {

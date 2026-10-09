@@ -106,7 +106,7 @@ class ResourceGovernor(private val scope: CoroutineScope) {
 
         private fun buildStateParams(state: GovernorStateParams) =
             kotlinx.serialization.json.buildJsonObject {
-                put("activeOp", state.activeOp)
+                state.activeOp?.let { put("activeOp", it) }
                 put("memAvailableKb", state.memAvailableKb)
                 put("memTotalKb", state.memTotalKb)
                 put("thermalThrottled", state.thermalThrottled)
