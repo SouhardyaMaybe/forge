@@ -3,9 +3,9 @@ package com.forge.ide.ui
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -51,8 +51,8 @@ fun ForgeApp() {
 
     val destinations = listOf(
         TopLevelDestination(HomeRoute, "Home", Icons.Filled.Home),
-        TopLevelDestination(FilesRoute, "Files", Icons.Filled.Folder),
-        TopLevelDestination(TerminalRoute, "Terminal", Icons.Filled.Terminal),
+        TopLevelDestination(FilesRoute, "Files", Icons.Filled.List),
+        TopLevelDestination(TerminalRoute, "Terminal", Icons.Filled.PlayArrow),
         TopLevelDestination(BuildRoute, "Build", Icons.Filled.Build),
     )
 
