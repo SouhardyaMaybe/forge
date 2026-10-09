@@ -1,6 +1,7 @@
+// AGP 9 provides built-in Kotlin — the kotlin-android plugin is intentionally
+// absent. jvmTarget defaults to compileOptions.targetCompatibility (17).
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -40,12 +41,6 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1,INDEX.LIST}"
         }
-    }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
