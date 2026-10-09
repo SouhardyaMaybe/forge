@@ -29,16 +29,9 @@ fun PlaceholderScreen(
 }
 
 @Composable
-fun FilesScreen(modifier: Modifier = Modifier) = PlaceholderScreen(
-    title = "Files",
-    body = "Workspace tree, git overlays and ripgrep search arrive in milestone M1.",
-    modifier = modifier,
-)
-
-@Composable
 fun TerminalScreen(modifier: Modifier = Modifier) = PlaceholderScreen(
     title = "Terminal",
-    body = "tmux-backed durable shell sessions (native PTY) arrive in milestone M1.",
+    body = "tmux-backed durable shell sessions (native PTY) arrive next.",
     modifier = modifier,
 )
 

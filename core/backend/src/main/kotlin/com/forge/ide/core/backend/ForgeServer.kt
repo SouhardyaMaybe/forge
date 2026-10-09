@@ -1,7 +1,13 @@
 package com.forge.ide.core.backend
 
+import com.forge.ide.core.backendapi.FsListParams
+import com.forge.ide.core.backendapi.FsReadParams
+import com.forge.ide.core.backendapi.FsRootResult
+import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
@@ -22,11 +28,35 @@ import com.forge.ide.core.backendapi.Response
  * with the agent host in M3, when more than one panel needs private streams.
  */
 fun Application.forgeServerModule(services: BackendServices) {
+    install(ContentNegotiation) { json() }
     install(WebSockets)
 
     routing {
         get("/health") {
             call.respondText("forge-ok")
+        }
+
+        // REST surface for request/response operations. The WebSocket below
+        // remains the streaming surface (terminal output, agent events).
+        get("/api/fs/list") {
+            val path = call.request.queryParameters["path"]
+                ?: return@get call.respond(HttpStatusCode.BadRequest, "path is required")
+            val depth = call.request.queryParameters["depth"]?.toIntOrNull() ?: 1
+            call.respond(services.fileService.list(FsListParams(path, depth)))
+        }
+
+        get("/api/fs/read") {
+            val path = call.request.queryParameters["path"]
+                ?: return@get call.respond(HttpStatusCode.BadRequest, "path is required")
+            call.respond(services.fileService.read(FsReadParams(path)))
+        }
+
+        get("/api/fs/root") {
+            call.respond(FsRootResult(services.fileService.defaultRoot.path))
+        }
+
+        get("/api/governor") {
+            call.respond(services.governor.state.value)
         }
 
         webSocket("/ws") {

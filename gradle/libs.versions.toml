@@ -32,6 +32,12 @@ ktor-bom = { group = "io.ktor", name = "ktor-bom", version.ref = "ktor" }
 ktor-server-core = { group = "io.ktor", name = "ktor-server-core" }
 ktor-server-cio = { group = "io.ktor", name = "ktor-server-cio" }
 ktor-server-websockets = { group = "io.ktor", name = "ktor-server-websockets" }
+ktor-server-content-negotiation = { group = "io.ktor", name = "ktor-server-content-negotiation" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json" }
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core" }
+ktor-client-cio = { group = "io.ktor", name = "ktor-client-cio" }
+ktor-client-websockets = { group = "io.ktor", name = "ktor-client-websockets" }
+ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation" }
 
 # Kotlin
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.10.0" }

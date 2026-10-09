@@ -24,6 +24,9 @@ data class FsEntry(
 )
 
 @Serializable
+data class FsRootResult(val path: String)
+
+@Serializable
 data class FsListParams(val path: String, val depth: Int = 1)
 
 @Serializable
