@@ -1,4 +1,4 @@
-package com.forge.ide.core.native
+package com.forge.ide.core.jni
 
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean

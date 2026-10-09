@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "com.forge.ide.core.native"
+    namespace = "com.forge.ide.core.jni"
     compileSdk = 37
 
     defaultConfig {

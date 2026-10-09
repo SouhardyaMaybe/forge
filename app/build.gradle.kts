@@ -47,7 +47,7 @@ android {
 dependencies {
     implementation(project(":core:backend-api"))
     implementation(project(":core:backend"))
-    implementation(project(":core:native"))
+    implementation(project(":core:jni"))
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

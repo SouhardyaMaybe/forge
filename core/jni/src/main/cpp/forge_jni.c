@@ -43,7 +43,7 @@ static jlong pack_handle(int32_t fd, int32_t pid) {
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeOpen(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeOpen(
         JNIEnv *env,
         jclass clazz,
         jobjectArray argv,
@@ -215,7 +215,7 @@ fail_free_argv:
 }
 
 JNIEXPORT jint JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeRead(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeRead(
         JNIEnv *env,
         jclass clazz,
         jlong handle,
@@ -239,7 +239,7 @@ Java_com_forge_ide_core_native_PtyNativeKt_nativeRead(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeWrite(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeWrite(
         JNIEnv *env,
         jclass clazz,
         jlong handle,
@@ -273,7 +273,7 @@ Java_com_forge_ide_core_native_PtyNativeKt_nativeWrite(
 }
 
 JNIEXPORT void JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeResize(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeResize(
         JNIEnv *env,
         jclass clazz,
         jlong handle,
@@ -288,7 +288,7 @@ Java_com_forge_ide_core_native_PtyNativeKt_nativeResize(
 }
 
 JNIEXPORT void JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeSignal(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeSignal(
         JNIEnv *env,
         jclass clazz,
         jlong handle,
@@ -297,7 +297,7 @@ Java_com_forge_ide_core_native_PtyNativeKt_nativeSignal(
 }
 
 JNIEXPORT void JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeClose(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeClose(
         JNIEnv *env,
         jclass clazz,
         jlong handle) {
@@ -308,7 +308,7 @@ Java_com_forge_ide_core_native_PtyNativeKt_nativeClose(
 }
 
 JNIEXPORT jint JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeWait(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeWait(
         JNIEnv *env,
         jclass clazz,
         jlong handle) {
@@ -335,7 +335,7 @@ Java_com_forge_ide_core_native_PtyNativeKt_nativeWait(
 }
 
 JNIEXPORT jintArray JNICALL
-Java_com_forge_ide_core_native_PtyNativeKt_nativeMemInfo(
+Java_com_forge_ide_core_jni_PtyNativeKt_nativeMemInfo(
         JNIEnv *env,
         jclass clazz) {
     // Returns [totalKb, availableKb] parsed from /proc/meminfo.

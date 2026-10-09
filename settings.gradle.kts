@@ -25,4 +25,4 @@ rootProject.name = "Forge"
 include(":app")
 include(":core:backend-api")
 include(":core:backend")
-include(":core:native")
+include(":core:jni")

@@ -1,4 +1,4 @@
-package com.forge.ide.core.native
+package com.forge.ide.core.jni
 
 /*
  * JNI bindings for the native PTY layer (forge_jni.c).

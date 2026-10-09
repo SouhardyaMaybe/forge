@@ -21,7 +21,7 @@ A from-scratch Kotlin/Compose app (no WebView, no Electron) that provides:
 app/                  MainActivity, Navigation 3 host, feature screens
 core/backend-api/     Wire protocol DTOs (shared by UI + backend processes)
 core/backend/         Foreground service + Ktor server on 127.0.0.1 (:backend process)
-core/native/          Native PTY (JNI) + Kotlin session wrapper
+core/jni/              Native PTY (JNI) + Kotlin session wrapper
 scripts/              On-device toolchain provisioning and S0 spike gates (run on the phone)
 docs/                 Implementation plan and research notes
 .github/workflows/    CI — assembles the debug APK and runs unit tests
