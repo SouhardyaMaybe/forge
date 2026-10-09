@@ -8,7 +8,7 @@ import com.forge.ide.core.backendapi.TermOpenParams
 import com.forge.ide.core.backendapi.TermOpenResult
 import com.forge.ide.core.backendapi.TermResizeParams
 import com.forge.ide.core.backendapi.TermSessionInfo
-import com.forge.ide.core.native.PtySession
+import com.forge.ide.core.jni.PtySession
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineScope

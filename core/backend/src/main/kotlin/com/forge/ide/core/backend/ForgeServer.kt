@@ -11,7 +11,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-
+import com.forge.ide.core.backendapi.Response
 /**
  * Backend HTTP/WS surface.
  *
@@ -62,7 +62,16 @@ fun Application.forgeServerModule(services: BackendServices) {
             try {
                 for (frame in incoming) {
                     if (frame is Frame.Text) {
-                        services.router.handle({ envelope -> send(envelope) }, frame.readText())
+                        services.router.handle(
+                            { response ->
+                                send(
+                                    Frame.Text(
+                                        json.encodeToString(Response.serializer(), response),
+                                    ),
+                                )
+                            },
+                            frame.readText(),
+                        )
                     }
                 }
             } finally {

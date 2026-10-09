@@ -1,6 +1,5 @@
 package com.forge.ide.core.backend
 
-import com.forge.ide.core.backendapi.Envelope
 import com.forge.ide.core.backendapi.Event
 import com.forge.ide.core.backendapi.FsDeleteParams
 import com.forge.ide.core.backendapi.FsListParams
@@ -36,7 +35,7 @@ class WsRouter(
     private val eventBus: EventBus,
     private val json: Json = Json { ignoreUnknownKeys = true; encodeDefaults = true },
 ) {
-    suspend fun handle(send: suspend (Envelope) -> Unit, payload: String) {
+    suspend fun handle(send: suspend (Response) -> Unit, payload: String) {
         val request = try {
             json.decodeFromString(Request.serializer(), payload)
         } catch (t: Throwable) {

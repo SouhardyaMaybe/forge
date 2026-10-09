@@ -2,7 +2,7 @@ package com.forge.ide.core.backend
 
 import com.forge.ide.core.backendapi.Events
 import com.forge.ide.core.backendapi.GovernorStateParams
-import com.forge.ide.core.native.PtySession
+import com.forge.ide.core.jni.PtySession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
