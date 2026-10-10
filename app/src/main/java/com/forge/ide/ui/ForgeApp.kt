@@ -309,33 +309,6 @@ fun ForgeApp(viewModel: MainViewModel = viewModel()) {
             themeMode = state.themeMode,
             onToggleTheme = viewModel::toggleTheme,
         )
-        !state.initialLanguageSelected && (state.startupStage == StartupStage.SETUP_REQUIRED || !state.onboardingComplete) ->
-            InitialLanguageSetupScreen(
-                currentLanguageCode = state.languageCode,
-                themeMode = state.themeMode,
-                onToggleTheme = viewModel::toggleTheme,
-                onSelectLanguage = viewModel::setLanguage,
-                onContinue = viewModel::finishInitialLanguageSetup,
-            )
-        !state.backgroundSetupComplete && state.startupStage == StartupStage.SETUP_REQUIRED ->
-            BackgroundTaskSetupScreen(
-                currentLanguageCode = state.languageCode,
-                onSetLanguage = viewModel::setLanguage,
-                themeMode = state.themeMode,
-                onToggleTheme = viewModel::toggleTheme,
-                onContinue = viewModel::finishBackgroundSetup,
-            )
-        state.startupStage == StartupStage.SETUP_REQUIRED -> RuntimeSetupPromptScreen(
-            selectedStacks = state.selectedDevStacks,
-            selectedAgent = state.agentKind,
-            themeMode = state.themeMode,
-            currentLanguageCode = state.languageCode,
-            onSetLanguage = viewModel::setLanguage,
-            onToggleTheme = viewModel::toggleTheme,
-            onToggleStack = viewModel::toggleDevStack,
-            onSelectAgent = viewModel::selectAgent,
-            onDownload = viewModel::startRuntimeSetup,
-        )
         state.startupStage == StartupStage.INSTALLING && state.showDetailedSetupProgress ->
             RuntimeInstallationScreen(
                 state = state,
@@ -356,39 +329,6 @@ fun ForgeApp(viewModel: MainViewModel = viewModel()) {
             onToggleTheme = viewModel::toggleTheme,
             onRetry = viewModel::retryStartup,
         )
-        state.startupStage == StartupStage.MODEL_SETUP && state.agentKind == AgentKind.ANTIGRAVITY ->
-            AntigravityOnboardingScreen(
-                state = state,
-                currentLanguageCode = state.languageCode,
-                onSetLanguage = viewModel::setLanguage,
-                onStartLogin = viewModel::startAntigravityLogin,
-                onSubmitCode = viewModel::submitAntigravityCode,
-                onContinue = viewModel::finishAntigravityOnboarding,
-                onSelectAgent = viewModel::chooseOnboardingAgent,
-                onToggleTheme = viewModel::toggleTheme,
-            )
-        state.startupStage == StartupStage.MODEL_SETUP -> ProviderSetupScreen(
-            initial = state.provider,
-            onboarding = true,
-            agentKind = state.agentKind,
-            initialStep = 1,
-            currentLanguageCode = state.languageCode,
-            onSetLanguage = viewModel::setLanguage,
-            onSave = viewModel::finishOnboarding,
-            onDiscover = viewModel::discoverModels,
-            onValidate = viewModel::validateProvider,
-            onSelectAgent = viewModel::chooseOnboardingAgent,
-            onToggleTheme = viewModel::toggleTheme,
-            themeMode = state.themeMode,
-        )
-        state.startupStage == StartupStage.READY && !state.backgroundSetupComplete ->
-            BackgroundTaskSetupScreen(
-                currentLanguageCode = state.languageCode,
-                onSetLanguage = viewModel::setLanguage,
-                themeMode = state.themeMode,
-                onToggleTheme = viewModel::toggleTheme,
-                onContinue = viewModel::finishBackgroundSetup,
-            )
         state.readOnlyProject != null -> ReadOnlyProjectScreen(
             state = state,
             onBack = viewModel::closeReadOnlyProject,
@@ -599,7 +539,7 @@ private fun InitialLanguageSetupScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         BrandMark(compact = true)
                         Spacer(Modifier.width(9.dp))
-                        Text("Mobile Harness", fontWeight = FontWeight.Bold)
+                        Text("Forge", fontWeight = FontWeight.Bold)
                     }
                 },
                 actions = {
@@ -2511,6 +2451,7 @@ private fun RootScreenHost(
                     onPing = viewModel::pingApi,
                     onToggleTheme = viewModel::toggleTheme,
                     onInstallUpdate = viewModel::installAppUpdate,
+                    onSetupToolchain = viewModel::startRuntimeSetup,
                 )
                 RootScreen.AGENT -> AgentScreen(
                     state = state,
@@ -3542,6 +3483,7 @@ private fun ProjectsScreen(
     onPing: () -> Unit,
     onToggleTheme: () -> Unit,
     onInstallUpdate: () -> Unit,
+    onSetupToolchain: () -> Unit = {},
 ) {
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showUpdateDialog by rememberSaveable { mutableStateOf(false) }
@@ -3578,6 +3520,16 @@ private fun ProjectsScreen(
             contentPadding = PaddingValues(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            item {
+                if (!state.runtimeSetupComplete) {
+                    OptionalToolchainCard(
+                        unavailableReason = state.runtimeUnavailableReason,
+                        installing = state.startupStage == StartupStage.INSTALLING,
+                        onSetup = onSetupToolchain,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
+            }
             item {
                 Text(stringResource(R.string.projects_hero_title), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.projects_hero_desc), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -7374,5 +7326,53 @@ private fun BrandMark(modifier: Modifier = Modifier, compact: Boolean = false) {
             modifier = Modifier.size(iconSize),
             tint = primary,
         )
+    }
+}
+
+
+/** Optional, never-blocking entry point for the Linux toolchain + agents. */
+@Composable
+private fun OptionalToolchainCard(
+    unavailableReason: String?,
+    installing: Boolean,
+    onSetup: () -> Unit,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Terminal, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.opt_toolchain_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = stringResource(R.string.opt_toolchain_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (unavailableReason != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = unavailableReason,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Button(onClick = onSetup, enabled = !installing) {
+                Text(
+                    stringResource(
+                        if (installing) R.string.opt_toolchain_installing else R.string.opt_toolchain_action,
+                    ),
+                )
+            }
+        }
     }
 }

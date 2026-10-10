@@ -382,4 +382,8 @@
     <string name="diagnostics_inactive_stopped">Inactive processes stopped</string>
     <string name="diagnostics_cache_busy">Wait for active work to finish before clearing output</string>
     <string name="diagnostics_cache_cleared">Disposable runtime output cleared</string>
+    <string name="opt_toolchain_title">Optional: Linux toolchain &amp; coding agents</string>
+    <string name="opt_toolchain_desc">Install the Ubuntu environment, JDK/SDK and an agent whenever you want them. Editing, the file explorer and the terminal work without it.</string>
+    <string name="opt_toolchain_action">Set up now</string>
+    <string name="opt_toolchain_installing">Setting up…</string>
 </resources>

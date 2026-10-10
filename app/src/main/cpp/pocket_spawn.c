@@ -145,3 +145,126 @@ Java_com_forge_ide_runtime_NativeSpawn_kill(JNIEnv *env, jobject self, jint pid,
     if (result != 0 && errno == ESRCH) result = kill(pid, signal);
     return result;
 }
+
+/*
+ * spawnDetached: launches a long-lived process that must outlive the calling
+ * application process.
+ *
+ * Agent CLIs and persistent shells die when the app process is killed by
+ * Android's low-memory killer — the process is a child and its controlling
+ * terminal lives in the app. Classic daemonisation fixes both:
+ *
+ *   1. fork -> intermediate process calls setsid() so the grandchild gets a
+ *      new session with no controlling terminal,
+ *   2. intermediate forks again and exits immediately, so the grandchild is
+ *      re-parented to init and no longer belongs to the app's process tree,
+ *   3. the grandchild ignores SIGHUP (a closing master/PTY no longer kills it),
+ *   4. stdio is wired to a FIFO (stdin) and an append-only log (stdout/stderr)
+ *      so the app can re-attach to a live session after a restart.
+ *
+ * Returns the grandchild's pid (or -1 on failure). The pid is reported from
+ * the intermediate process over a pipe because the parent must not waitpid()
+ * on the grandchild itself (it is not its child).
+ */
+JNIEXPORT jint JNICALL
+Java_com_forge_ide_runtime_NativeSpawn_spawnDetached(JNIEnv *env, jobject self, jobjectArray java_argv,
+                                                     jobjectArray java_env, jstring java_cwd,
+                                                     jstring java_log, jstring java_fifo) {
+    (void)self;
+    jsize argc = (*env)->GetArrayLength(env, java_argv);
+    jsize envc = (*env)->GetArrayLength(env, java_env);
+    char **argv = calloc((size_t)argc + 1, sizeof(char *));
+    char **envp = calloc((size_t)envc + 1, sizeof(char *));
+    if (!argv || !envp) return -1;
+    for (jsize i = 0; i < argc; i++) {
+        jstring value = (jstring)(*env)->GetObjectArrayElement(env, java_argv, i);
+        const char *utf = (*env)->GetStringUTFChars(env, value, NULL);
+        argv[i] = strdup(utf);
+        (*env)->ReleaseStringUTFChars(env, value, utf);
+        (*env)->DeleteLocalRef(env, value);
+    }
+    for (jsize i = 0; i < envc; i++) {
+        jstring value = (jstring)(*env)->GetObjectArrayElement(env, java_env, i);
+        const char *utf = (*env)->GetStringUTFChars(env, value, NULL);
+        envp[i] = strdup(utf);
+        (*env)->ReleaseStringUTFChars(env, value, utf);
+        (*env)->DeleteLocalRef(env, value);
+    }
+    const char *cwd_utf = (*env)->GetStringUTFChars(env, java_cwd, NULL);
+    char *cwd = strdup(cwd_utf);
+    (*env)->ReleaseStringUTFChars(env, java_cwd, cwd_utf);
+    const char *log_utf = (*env)->GetStringUTFChars(env, java_log, NULL);
+    char *log_path = strdup(log_utf);
+    (*env)->ReleaseStringUTFChars(env, java_log, log_utf);
+    const char *fifo_utf = (*env)->GetStringUTFChars(env, java_fifo, NULL);
+    char *fifo_path = strdup(fifo_utf);
+    (*env)->ReleaseStringUTFChars(env, java_fifo, fifo_utf);
+
+    // The FIFO is the session's stdin channel. It must exist before the
+    // grandchild opens it, and the app opens it read-write so the open never
+    // blocks and the pipe never sees EOF when no client is attached.
+    unlink(fifo_path);
+    if (mkfifo(fifo_path, 0600) != 0 && errno != EEXIST) {
+        free(argv[0]);
+        return -1;
+    }
+
+    int pid_pipe[2] = {-1, -1};
+    if (pipe(pid_pipe) != 0) return -1;
+
+    pid_t intermediate = fork();
+    if (intermediate < 0) return -1;
+
+    if (intermediate == 0) {
+        // Intermediate: own session, then spawn the worker and exit.
+        close(pid_pipe[0]);
+        if (setsid() < 0) _exit(126);
+        signal(SIGHUP, SIG_IGN);
+
+        pid_t worker = fork();
+        if (worker < 0) _exit(126);
+
+        if (worker == 0) {
+            // Worker: re-parented to init, no controlling terminal.
+            close(pid_pipe[0]);
+            close(pid_pipe[1]);
+            signal(SIGHUP, SIG_IGN);
+
+            int log_fd = open(log_path, O_CREAT | O_WRONLY | O_APPEND, 0600);
+            if (log_fd < 0) _exit(126);
+            int stdin_fd = open(fifo_path, O_RDWR);
+            if (stdin_fd < 0) _exit(126);
+
+            dup2(stdin_fd, STDIN_FILENO);
+            dup2(log_fd, STDOUT_FILENO);
+            dup2(log_fd, STDERR_FILENO);
+            if (stdin_fd > STDERR_FILENO) close(stdin_fd);
+            if (log_fd > STDERR_FILENO) close(log_fd);
+
+            if (chdir(cwd) != 0) _exit(126);
+            prctl(PR_SET_DUMPABLE, 1, 0, 0, 0);
+            execve(argv[0], argv, envp);
+            dprintf(STDERR_FILENO, "Forge detached exec failed: %s\n", strerror(errno));
+            _exit(127);
+        }
+
+        // Report the worker pid to the app, then exit immediately.
+        dprintf(pid_pipe[1], "%d", (int)worker);
+        close(pid_pipe[1]);
+        _exit(0);
+    }
+
+    // App process: read the worker pid, then reap the intermediate.
+    close(pid_pipe[1]);
+    char buffer[32];
+    ssize_t count = read(pid_pipe[0], buffer, sizeof(buffer) - 1);
+    close(pid_pipe[0]);
+    if (count <= 0) {
+        waitpid(intermediate, NULL, 0);
+        return -1;
+    }
+    buffer[count] = '\0';
+    int worker_pid = atoi(buffer);
+    waitpid(intermediate, NULL, 0);
+    return worker_pid;
+}

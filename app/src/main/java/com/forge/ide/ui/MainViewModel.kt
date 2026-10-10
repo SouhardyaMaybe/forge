@@ -286,6 +286,8 @@ data class AppUiState(
     val startupErrorIsOffline: Boolean = false,
     val showDetailedSetupProgress: Boolean = false,
     val onboardingComplete: Boolean = false,
+    val runtimeSetupComplete: Boolean = false,
+    val runtimeUnavailableReason: String? = null,
     val backgroundSetupComplete: Boolean = false,
     val initialLanguageSelected: Boolean = false,
     val provider: ProviderProfile = ProviderProfile(ProviderKind.ANTHROPIC),
@@ -2056,8 +2058,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (!supportsArm64Runtime(android.os.Build.SUPPORTED_ABIS, System.getProperty("os.arch"))) {
             _state.update {
                 it.copy(
-                    startupStage = StartupStage.SETUP_REQUIRED,
-                    startupMessage = str(R.string.vm_arm64_required),
+                    startupStage = StartupStage.READY,
+                    runtimeSetupComplete = false,
+                    runtimeUnavailableReason = str(R.string.vm_arm64_required),
                     startupError = null,
                     startupErrorIsOffline = false,
                 )
@@ -2083,12 +2086,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 installedAgentVersions = if (installed) installer.installedAgentVersions() else emptyMap(),
             )
         }
+        // Nothing blocks the user from reaching the workspace any more. If the
+        // Linux toolchain is not installed we go straight to READY and surface
+        // setup as an optional action instead of a mandatory screen.
+        _state.update { it.copy(runtimeSetupComplete = installed) }
         when {
-            !installed && setupSnapshot.status == RuntimeSetupStatus.ERROR -> onSetupSnapshot(setupSnapshot)
-            !installed -> _state.update { it.copy(startupStage = StartupStage.SETUP_REQUIRED, startupProgress = 0f) }
+            !installed -> _state.update { it.copy(startupStage = StartupStage.READY) }
             !preferences.onboardingComplete -> {
+                // Model/provider credentials are optional too; they live in Settings.
                 preferences.runtimeSetupComplete = true
-                _state.update { it.copy(startupStage = StartupStage.MODEL_SETUP, startupProgress = 1f) }
+                _state.update { it.copy(startupStage = StartupStage.READY) }
             }
             else -> initializeRuntime()
         }
