@@ -20,11 +20,21 @@ android {
 
     buildTypes {
         debug {
-            isMinifyEnabled = false
+            // Minified on purpose: CI's runner has a hard memory ceiling and
+            // the D8 worker needs the input shrunk first. Also keeps the
+            // artifact small for 3 GB phones.
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
         release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 
