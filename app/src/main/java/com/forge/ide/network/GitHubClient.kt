@@ -114,7 +114,7 @@ class GitHubClient(private val context: Context? = null) {
             doOutput = true
             setRequestProperty("Accept", "application/json")
             setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-            setRequestProperty("User-Agent", "PocketDev-Android")
+            setRequestProperty("User-Agent", "Forge-Android")
         }
         connection.outputStream.use { it.write(body) }
         return readResponse(connection) as JSONObject
@@ -128,7 +128,7 @@ class GitHubClient(private val context: Context? = null) {
             setRequestProperty("Accept", "application/vnd.github+json")
             setRequestProperty("Authorization", "Bearer $token")
             setRequestProperty("X-GitHub-Api-Version", "2026-03-10")
-            setRequestProperty("User-Agent", "PocketDev-Android")
+            setRequestProperty("User-Agent", "Forge-Android")
         }
         return readResponse(connection)
     }

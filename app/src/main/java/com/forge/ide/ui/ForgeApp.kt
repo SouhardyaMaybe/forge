@@ -293,7 +293,7 @@ private enum class WorkspaceTab(@StringRes val labelRes: Int, val icon: ImageVec
 }
 
 @Composable
-fun PocketDevApp(viewModel: MainViewModel = viewModel()) {
+fun ForgeApp(viewModel: MainViewModel = viewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val projectsListState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }

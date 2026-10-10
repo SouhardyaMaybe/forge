@@ -22,7 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.forge.ide.ui.AppStrings
 import com.forge.ide.ui.LocaleHelper
 import com.forge.ide.ui.MainViewModel
-import com.forge.ide.ui.PocketDevApp
+import com.forge.ide.ui.ForgeApp
 import com.forge.ide.ui.theme.PocketTheme
 
 class MainActivity : ComponentActivity() {
@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                 LocalActivityResultRegistryOwner provides this,
             ) {
                 PocketTheme(themeMode = state.themeMode) {
-                    PocketDevApp(vm)
+                    ForgeApp(vm)
                 }
             }
         }

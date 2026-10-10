@@ -108,7 +108,7 @@ object AndroidProjectTemplateGenerator {
         val packagePath = namespace.replace('.', '/')
         write(root, "app/src/main/AndroidManifest.xml", """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-                <application android:theme="@style/Theme.PocketDevApp" android:label="@string/app_name">
+                <application android:theme="@style/Theme.ForgeApp" android:label="@string/app_name">
                     <activity android:name=".MainActivity" android:exported="true">
                         <intent-filter>
                             <action android:name="android.intent.action.MAIN" />
@@ -120,7 +120,7 @@ object AndroidProjectTemplateGenerator {
         """)
         write(root, "app/src/main/res/values/themes.xml", """
             <resources>
-                <style name="Theme.PocketDevApp" parent="android:style/Theme.Material.Light.NoActionBar">
+                <style name="Theme.ForgeApp" parent="android:style/Theme.Material.Light.NoActionBar">
                     <item name="android:fontFamily">sans</item>
                     <item name="android:colorAccent">#6750A4</item>
                     <item name="android:statusBarColor">#FFFBFE</item>
@@ -155,7 +155,7 @@ object AndroidProjectTemplateGenerator {
             @Composable
             private fun Welcome() {
                 Column(Modifier.fillMaxSize(), Arrangement.Center, Alignment.CenterHorizontally) {
-                    Text("Built with PocketDev")
+                    Text("Built with Forge")
                 }
             }
         """)
@@ -165,7 +165,7 @@ object AndroidProjectTemplateGenerator {
         val packagePath = namespace.replace('.', '/')
         write(root, "app/src/main/AndroidManifest.xml", """
             <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-                <application android:theme="@style/Theme.PocketDevApp" android:label="@string/app_name">
+                <application android:theme="@style/Theme.ForgeApp" android:label="@string/app_name">
                     <activity android:name=".MainActivity" android:exported="true">
                         <intent-filter>
                             <action android:name="android.intent.action.MAIN" />
@@ -177,7 +177,7 @@ object AndroidProjectTemplateGenerator {
         """)
         write(root, "app/src/main/res/values/themes.xml", """
             <resources>
-                <style name="Theme.PocketDevApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <style name="Theme.ForgeApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                     <item name="colorPrimary">#6750A4</item>
                     <item name="android:statusBarColor">?android:colorBackground</item>
                     <item name="android:navigationBarColor">?android:colorBackground</item>
@@ -188,7 +188,7 @@ object AndroidProjectTemplateGenerator {
         """)
         write(root, "app/src/main/res/values-night/themes.xml", """
             <resources>
-                <style name="Theme.PocketDevApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+                <style name="Theme.ForgeApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
                     <item name="colorPrimary">#D0BCFF</item>
                     <item name="android:statusBarColor">?android:colorBackground</item>
                     <item name="android:navigationBarColor">?android:colorBackground</item>
@@ -199,7 +199,7 @@ object AndroidProjectTemplateGenerator {
         """)
         write(root, "app/src/main/res/layout/activity_main.xml", """
             <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical">
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Built with PocketDev" android:textSize="22sp" />
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Built with Forge" android:textSize="22sp" />
             </LinearLayout>
         """)
         write(root, "app/src/main/java/$packagePath/MainActivity.kt", """
