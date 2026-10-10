@@ -44,7 +44,7 @@ object WsCodec {
         val masked = ByteArray(data.size) { i -> (data[i].toInt() xor mask[i % 4].toInt()).toByte() }
         val lengthField = lengthFieldBytes(data.size, masked = true)
         val out = java.io.ByteArrayOutputStream(1 + lengthField.size + 4 + masked.size)
-        out.write((0x80 or opcode).toByte())
+        out.write((0x80 or opcode) and 0xFF)
         out.write(lengthField)
         out.write(mask)
         out.write(masked)
