@@ -78,7 +78,7 @@ fun NativeShellScreen(modifier: Modifier = Modifier) {
     fun activeTab(): ShellTab = tabs[activeIndex.coerceIn(tabs.indices)]
 
     fun sessionFor(tab: ShellTab): NativeShellSession {
-        sessions.getOrPut(tab.id) {
+        return sessions.getOrPut(tab.id) {
             NativeShellSession(tab.id).also { session ->
                 session.onOutput = { chunk ->
                     val text = chunk.replace("\r\n", "\n").replace("\r", "\n")
