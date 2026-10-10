@@ -91,7 +91,7 @@ internal class NativeSpawnProcess private constructor(
     }
 }
 
-private object NativeSpawn {
+internal object NativeSpawn {
     const val STILL_RUNNING = -2
 
     init {
