@@ -107,6 +107,16 @@ private object NativeSpawn {
         ptyRows: Int,
         ptyColumns: Int,
     ): IntArray
+
+    /** Daemonised launch: the child survives the app process and re-attaches via FIFO + log. */
+    external fun spawnDetached(
+        argv: Array<String>,
+        environment: Array<String>,
+        cwd: String,
+        logPath: String,
+        fifoPath: String,
+    ): Int
+
     external fun waitFor(pid: Int, noHang: Boolean): Int
     external fun kill(pid: Int, signal: Int): Int
 }

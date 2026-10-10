@@ -119,22 +119,3 @@ internal class DetachedProcess private constructor(
         }
     }
 }
-
-private object NativeSpawn {
-    const val STILL_RUNNING = -2
-
-    init {
-        System.loadLibrary("pocketspawn")
-    }
-
-    external fun spawnDetached(
-        argv: Array<String>,
-        environment: Array<String>,
-        cwd: String,
-        logPath: String,
-        fifoPath: String,
-    ): Int
-
-    external fun kill(pid: Int, signal: Int): Int
-    external fun waitFor(pid: Int, noHang: Boolean): Int
-}
