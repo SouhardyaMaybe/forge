@@ -29,13 +29,6 @@ fun PlaceholderScreen(
 }
 
 @Composable
-fun TerminalScreen(modifier: Modifier = Modifier) = PlaceholderScreen(
-    title = "Terminal",
-    body = "tmux-backed durable shell sessions (native PTY) arrive next.",
-    modifier = modifier,
-)
-
-@Composable
 fun AboutScreen(modifier: Modifier = Modifier) = PlaceholderScreen(
     title = "About Forge",
     body = "Forge is an open-source native IDE for Android: file explorer, editor, " +
