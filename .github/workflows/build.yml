@@ -63,7 +63,7 @@ jobs:
           /tmp/gradle/gradle-9.8.1/bin/gradle wrapper --gradle-version 9.8.1 --distribution-type bin
 
       - name: Assemble debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon --console=plain
+        run: ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace
 
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest --no-daemon --console=plain
