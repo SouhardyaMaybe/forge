@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
-    <!-- The service itself is declared in the app manifest with
-         android:process=":backend"; nothing else is needed here. -->
-    <application />
-
-</manifest>

@@ -1,71 +1,49 @@
 # Forge
 
-**A native, agentic IDE for Android.** Editor, terminal, on-device Gradle builds, and a host for CLI coding agents — built for 3 GB phones.
+**A native, agentic IDE for Android** — code on your phone with real Linux tooling, hosted coding agents, and on-device Gradle builds. No root required.
 
-> Status: **scaffold / M0 spike**. CI builds a debug APK; feature work lands incrementally per the implementation plan.
+> **Built on [Mobile Harness](https://github.com/techjarves/Mobile-Harness)** (MIT) — see [`docs/adr/0001-adopt-mobile-harness.md`](docs/adr/0001-adopt-mobile-harness.md) for what we inherited and why.
 
-## What Forge is
+## What's already here
 
-A from-scratch Kotlin/Compose app (no WebView, no Electron) that provides:
+Forge is not a blank slate. The base product (upstream Mobile Harness v1.0.6) already ships:
 
-| Pillar | What it means |
+| Capability | Status |
 |---|---|
-| **Native editing** | Compose UI, VS Code-style file explorer, tabs, command palette, LSP bridge — 60 fps on a 3 GB phone |
-| **Real builds** | A Debian userland under proot hosts JDK, Gradle, Android SDK build-tools and NDK, so real `assembleDebug` / signed `assembleRelease` run on the phone |
-| **Durable everything** | tmux-backed terminals, journaled agents, log-tailed builds: any process can die and lose ≤ 1 s |
-| **Any agent** | Host Claude Code, OpenCode, Codex, Aider or any TUI agent with a permission broker, checkpoints and rollback |
+| Jetpack Compose UI: file browser, editor, terminal, diff review, web preview | ✅ inherited |
+| PRoot Ubuntu 20.04 ARM64 userspace, app-private, no root | ✅ inherited |
+| Cached/isolated agent drivers: **Claude Code**, **DeepSeek Harness (DSH)**, **Antigravity CLI** with resumable conversations | ✅ inherited |
+| On-device **Android builds**: Temurin JDK 17, Android SDK 36, build-tools 35, Gradle 8.14, offline Maven repo, AAPT2 override | ✅ inherited |
+| Keystore-backed AES-256-GCM credential storage, logcat reader, APK install/run | ✅ inherited |
+| ARM64, Android 9+ (API 28), online (87 MB) / offline (888 MB) editions, F-Droid metadata | ✅ inherited |
 
-## Repository layout
+## What Forge adds on top
 
-```
-app/                  MainActivity, Navigation 3 host, feature screens
-core/backend-api/     Wire protocol DTOs (shared by UI + backend processes)
-core/backend/         Foreground service + Ktor server on 127.0.0.1 (:backend process)
-core/jni/              Native PTY (JNI) + Kotlin session wrapper
-scripts/              On-device toolchain provisioning and S0 spike gates (run on the phone)
-docs/                 Implementation plan and research notes
-.github/workflows/    CI — assembles the debug APK and runs unit tests
-```
+Our roadmap layers the differentiators that upstream does not have yet — see
+[`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the full plan:
 
-Full architecture, constraints and the 18-month roadmap: [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md).
+1. **Resource Governor + memory tiers** — the plan's 3 GB / 6 GB / 8 GB device
+   profiles, serialising builds/agents/LSPs so a 3 GB phone never OOMs.
+2. **Plugin system** — a curated marketplace (themes, grammars, snippets,
+   keybindings, tool installs) modelled on Open VSX + Acode's plugin store.
+3. **Adaptive multi-pane UI** — foldables, tablets and desktop mode, not just
+   the phone layout.
+4. **Pipeline hardening** — durable sessions, checkpoints and rollback for
+   every agent run, and the S0 device-gate scripts (`scripts/`).
 
 ## Building
 
-**All builds happen on GitHub Actions** (this repo's dev environment has no Android build capacity).
+CI is the source of truth — GitHub Actions assembles the `onlineDebug` APK and
+uploads it as an artifact. The build fetches the runtime bundles referenced by
+`dist/runtime-bundles/manifest.json` from upstream releases.
 
-- Push to `main` or open a PR → CI assembles the debug APK and uploads it as an artifact.
-- Manual run: Actions → *build* → *Run workflow*.
-
-Pinned toolchain: AGP 9.4.1, Gradle 9.8.1, Kotlin 2.4.21, compileSdk/targetSdk 37, minSdk 26.
-
-To build locally (once, on a machine with the SDK), generate the wrapper first:
+Local build (needs Android SDK + NDK 28.2):
 
 ```bash
-gradle wrapper --gradle-version 9.8.1 --distribution-type bin
-./gradlew :app:assembleDebug
+./gradlew :app:assembleOnlineDebug     # online edition
+./gradlew :app:assembleOfflineDebug    # bundles everything (needs the tarballs)
 ```
-
-## On-device setup (S0 spike)
-
-The scripts in `scripts/` run **on the phone** (inside Termux + proot Debian), not in CI:
-
-```bash
-# Provision toolchain: rootfs, JDK, Android SDK build-tools
-./scripts/idesetup.sh
-
-# Verify the S0 gates: aapt2/d8/gradle run, tmux survives UI death, agent CLIs run
-./scripts/s0-gates.sh
-```
-
-## Roadmap
-
-- **S0 (now)** — de-risk spike on a 3 GB device: proot + SDK tools + a real Gradle build
-- **M1** — alpha IDE: files, editor, terminal, build orchestration, install, logcat
-- **M2** — git UI and LSP bridge
-- **M3** — agentic host with permission broker and checkpoints
-- **M4** — hardening, adaptive layouts, plugin system
-- **M5** — beta and public release
 
 ## License
 
-Apache-2.0. Third-party component licenses are documented in `docs/oss-research.md`.
+MIT, with attribution to the Mobile Harness authors. See [`LICENSE`](LICENSE).

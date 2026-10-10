@@ -1,12 +1,6 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
+        google()
         mavenCentral()
         gradlePluginPortal()
     }
@@ -20,9 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Forge"
-
+rootProject.name = "MobileHarness"
 include(":app")
-include(":core:backend-api")
-include(":core:backend")
-include(":core:jni")

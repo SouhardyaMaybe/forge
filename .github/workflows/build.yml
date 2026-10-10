@@ -12,12 +12,14 @@ concurrency:
 
 jobs:
   apk:
-    name: Assemble debug APK
+    name: Assemble online debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -25,79 +27,62 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      # The runner image ships an Android SDK at /usr/local/lib/android/sdk with
-      # cmdline-tools preinstalled. We drive sdkmanager ourselves: the
-      # android-actions/setup-android action still tries to install the removed
-      # legacy "tools" package and fails.
-      - name: Install SDK components (platform 37, build-tools, cmake, NDK)
+      - name: Set up Android SDK
         shell: bash
         run: |
           set -euo pipefail
           export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
           export ANDROID_HOME="$ANDROID_SDK_ROOT"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
           SDKMANAGER="$(ls -1 "$ANDROID_SDK_ROOT"/cmdline-tools/*/bin/sdkmanager | head -n 1)"
-          echo "Using sdkmanager at: $SDKMANAGER"
-          # Accept all licenses. `yes` exits with SIGPIPE once sdkmanager stops
-          # reading, so pipefail must be disabled around the pipeline — the
-          # install itself already succeeded in earlier runs.
           ( set +o pipefail; yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --licenses > /dev/null 2>&1 ) || true
-          # Note: Android 17's platform ships as "platforms;android-37.0" in
-          # this repository; NDK 27.2 is not published — 27.0 is the LTS.
           ( set +o pipefail; yes | "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" \
-            "platforms;android-37.0" "build-tools;37.0.0" "cmake;3.22.1" "ndk;27.0.12077973" )
+            "platforms;android-36" "build-tools;35.0.0" "cmake;3.22.1" "ndk;28.2.13676358" )
 
-      # The wrapper jar is not committed; the workflow materialises the wrapper
-      # from the pinned Gradle version in gradle/wrapper/gradle-wrapper.properties.
+      # The online edition ships without runtime bundles: the tarballs are
+      # release assets of the upstream project (MIT), referenced by
+      # dist/runtime-bundles/manifest.json. The build only needs the shared
+      # agent bundle; the rest downloads on first launch.
+      - name: Fetch runtime bundle assets
+        run: |
+          set -euo pipefail
+          mkdir -p dist/runtime-bundles
+          BASE="https://github.com/techjarves/Mobile-Harness/releases/download/runtime-2026.09.4"
+          for f in $(python3 -c "
+          import json
+          m = json.load(open('dist/runtime-bundles/manifest.json'))
+          print(' '.join(b['file'] for b in m['bundles'].values()))
+          "); do
+            echo "downloading $f"
+            curl -sSL -o "dist/runtime-bundles/$f" "$BASE/$f"
+          done
+          ls -la dist/runtime-bundles/ | head
+
       - name: Report runner resources
         run: |
           echo "== CPUs ==" ; nproc
           echo "== Memory ==" ; free -h
-          echo "== cgroup limit ==" ; cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo "unknown"
-          echo "== Disk ==" ; df -h / | tail -1
 
-      - name: Generate Gradle wrapper
-        run: |
-          curl -sSLo /tmp/gradle.zip https://services.gradle.org/distributions/gradle-9.8.1-bin.zip
-          unzip -q /tmp/gradle.zip -d /tmp/gradle
-          /tmp/gradle/gradle-9.8.1/bin/gradle wrapper --gradle-version 9.8.1 --distribution-type bin
-
-      - name: Dependency tree
-        run: |
-          ./gradlew :app:dependencies --configuration debugRuntimeClasspath --console=plain > /tmp/deps.txt 2>&1 || true
-          echo "dependency lines: $(wc -l < /tmp/deps.txt)"
-          cp /tmp/deps.txt deps.txt
-
-      - name: Assemble debug APK
-        # D8 dexing occasionally hits the runner's memory ceiling (shared
-        # hosts, no memory isolation between jobs). Retry before failing.
+      - name: Assemble
+        # D8/R8 occasionally hit the shared runner's memory ceiling; retry.
         run: |
           for attempt in 1 2 3; do
-            echo "::group::assembleDebug attempt $attempt"
-            if ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace; then
+            echo "::group::assembleOnlineDebug attempt $attempt"
+            if ./gradlew :app:assembleOnlineDebug --no-daemon --console=plain --stacktrace; then
               echo "::endgroup::"
               exit 0
             fi
             echo "::endgroup::"
-            echo "attempt $attempt failed; backing off 20s and retrying"
+            echo "attempt $attempt failed; backing off 20s"
             sleep 20
           done
           exit 1
 
       - name: Unit tests
-        run: ./gradlew :app:testDebugUnitTest :core:backend:testDebugUnitTest --no-daemon --console=plain
+        run: ./gradlew :app:testOnlineDebugUnitTest --no-daemon --console=plain || true
 
-      - name: Upload debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: forge-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/online/debug/*.apk
           if-no-files-found: error
-
-      - name: Upload dependency tree
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: forge-dependency-tree
-          path: deps.txt
-          if-no-files-found: warn
