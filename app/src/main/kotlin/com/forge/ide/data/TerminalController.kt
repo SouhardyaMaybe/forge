@@ -2,6 +2,7 @@ package com.forge.ide.data
 
 import com.forge.ide.core.backend.ForgeRuntime
 import com.forge.ide.core.backendapi.Event
+import com.forge.ide.core.backendapi.Events
 import com.forge.ide.core.backendapi.Methods
 import com.forge.ide.core.backendapi.Request
 import com.forge.ide.core.backendapi.Response
@@ -71,16 +72,18 @@ class TerminalController(
         onConnectionChange?.invoke(true)
 
         // Open (or re-attach to) this session server-side.
-        try {
-            request(
-                Methods.TERM_OPEN,
-                json.encodeToJsonElement(
-                    TermOpenParams.serializer(),
-                    TermOpenParams(sessionId = sessionId, rows = 24, cols = 80),
-                ).let { it as JsonObject },
-            )
-        } catch (t: Throwable) {
-            onConnectionChange?.invoke(false)
+        scope.launch {
+            try {
+                request(
+                    Methods.TERM_OPEN,
+                    json.encodeToJsonElement(
+                        TermOpenParams.serializer(),
+                        TermOpenParams(sessionId = sessionId, rows = 24, cols = 80),
+                    ).let { it as JsonObject },
+                )
+            } catch (t: Throwable) {
+                onConnectionChange?.invoke(false)
+            }
         }
     }
 
