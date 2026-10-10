@@ -63,7 +63,10 @@ jobs:
           /tmp/gradle/gradle-9.8.1/bin/gradle wrapper --gradle-version 9.8.1 --distribution-type bin
 
       - name: Dependency tree
-        run: ./gradlew :app:dependencies --configuration debugRuntimeClasspath --console=plain > /tmp/deps.txt 2>&1 ; echo "lines: $(wc -l < /tmp/deps.txt)" ; cp /tmp/deps.txt deps.txt
+        run: |
+          ./gradlew :app:dependencies --configuration debugRuntimeClasspath --console=plain > /tmp/deps.txt 2>&1 || true
+          echo "dependency lines: $(wc -l < /tmp/deps.txt)"
+          cp /tmp/deps.txt deps.txt
 
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace
