@@ -269,3 +269,15 @@ Java_com_forge_ide_runtime_NativeSpawn_spawnDetached(JNIEnv *env, jobject self, 
     waitpid(intermediate, NULL, 0);
     return worker_pid;
 }
+
+/* Sets the window size of an existing PTY so long output wraps sensibly. */
+JNIEXPORT jint JNICALL
+Java_com_forge_ide_runtime_NativeSpawn_resize(JNIEnv *env, jobject self, jint master_fd,
+                                              jint rows, jint columns) {
+    (void)env; (void)self;
+    struct winsize size;
+    memset(&size, 0, sizeof(size));
+    size.ws_row = (unsigned short)(rows > 0 ? rows : 24);
+    size.ws_col = (unsigned short)(columns > 0 ? columns : 80);
+    return ioctl(master_fd, TIOCSWINSZ, &size);
+}

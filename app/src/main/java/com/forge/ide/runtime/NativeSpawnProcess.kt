@@ -13,7 +13,14 @@ internal class NativeSpawnProcess private constructor(
     internal val outputFile: File,
     private val stdin: OutputStream,
     private val outputPump: Thread? = null,
+    private val masterFd: Int = -1,
 ) : Process() {
+
+    /** Changes the PTY window size (affects line wrapping for full-screen programs). */
+    fun resize(rows: Int, columns: Int) {
+        if (masterFd < 0) return
+        runCatching { NativeSpawn.resize(masterFd, rows, columns) }
+    }
     @Volatile private var result: Int? = null
 
     override fun getOutputStream(): OutputStream = stdin
@@ -86,7 +93,7 @@ internal class NativeSpawnProcess private constructor(
                     start()
                 }
             }
-            return NativeSpawnProcess(spawned[0], outputFile, input, pump)
+            return NativeSpawnProcess(spawned[0], outputFile, input, pump, spawned[2])
         }
     }
 }
@@ -117,6 +124,7 @@ internal object NativeSpawn {
         fifoPath: String,
     ): Int
 
+    external fun resize(masterFd: Int, rows: Int, columns: Int): Int
     external fun waitFor(pid: Int, noHang: Boolean): Int
     external fun kill(pid: Int, signal: Int): Int
 }

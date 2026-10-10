@@ -258,6 +258,7 @@ import com.forge.ide.network.ConnectionValidation
 import com.forge.ide.network.DiscoveredModel
 import com.forge.ide.network.ModelDiscoveryResult
 import com.forge.ide.network.GitHubRepository
+import com.forge.ide.ui.shell.NativeShellScreen
 import com.forge.ide.ui.theme.PocketBlue
 import com.forge.ide.ui.theme.PocketGreen
 import com.forge.ide.ui.theme.PocketOrange
@@ -281,6 +282,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 
 private enum class RootScreen(@StringRes val labelRes: Int, val icon: ImageVector) {
     PROJECTS(R.string.tab_projects, Icons.Default.Folder),
+    TERMINAL(R.string.tab_terminal, Icons.Default.Terminal),
     AGENT(R.string.tab_agent, Icons.Default.SmartToy),
     SETTINGS(R.string.tab_settings, Icons.Default.Settings),
 }
@@ -2452,6 +2454,9 @@ private fun RootScreenHost(
                     onToggleTheme = viewModel::toggleTheme,
                     onInstallUpdate = viewModel::installAppUpdate,
                     onSetupToolchain = viewModel::startRuntimeSetup,
+                )
+                RootScreen.TERMINAL -> NativeShellScreen(
+                    modifier = Modifier.fillMaxSize(),
                 )
                 RootScreen.AGENT -> AgentScreen(
                     state = state,
