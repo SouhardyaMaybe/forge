@@ -69,7 +69,20 @@ jobs:
           cp /tmp/deps.txt deps.txt
 
       - name: Assemble debug APK
-        run: ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace
+        # D8 dexing occasionally hits the runner's memory ceiling (shared
+        # hosts, no memory isolation between jobs). Retry before failing.
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::assembleDebug attempt $attempt"
+            if ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "attempt $attempt failed; backing off 20s and retrying"
+            sleep 20
+          done
+          exit 1
 
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest :core:backend:testDebugUnitTest --no-daemon --console=plain
