@@ -62,6 +62,9 @@ jobs:
           unzip -q /tmp/gradle.zip -d /tmp/gradle
           /tmp/gradle/gradle-9.8.1/bin/gradle wrapper --gradle-version 9.8.1 --distribution-type bin
 
+      - name: Dependency tree
+        run: ./gradlew :app:dependencies --configuration debugRuntimeClasspath --console=plain > /tmp/deps.txt 2>&1 ; echo "lines: $(wc -l < /tmp/deps.txt)" ; cp /tmp/deps.txt deps.txt
+
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug --no-daemon --console=plain --stacktrace
 
@@ -74,3 +77,11 @@ jobs:
           name: forge-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Upload dependency tree
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forge-dependency-tree
+          path: deps.txt
+          if-no-files-found: warn
