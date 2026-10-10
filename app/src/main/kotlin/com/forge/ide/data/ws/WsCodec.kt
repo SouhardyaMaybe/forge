@@ -23,18 +23,7 @@ object WsCodec {
     /** Builds a masked text frame from [payload]. */
     fun encodeText(payload: String): ByteArray {
         val data = payload.toByteArray(Charsets.UTF_8)
-        val mask = ByteArray(4).also { java.security.SecureRandom().nextBytes(it) }
-        val masked = ByteArray(data.size) { i -> (data[i].toInt() xor mask[i % 4].toInt()).toByte() }
-
-        val header = mutableListOf<Byte>()
-        header += (0x80 or OPCODE_TEXT).toByte() // FIN + text opcode
-        header += lengthByte(data.size, masked = true)
-
-        val out = java.io.ByteArrayOutputStream(header.size + 4 + masked.size)
-        out.write(header.toByteArray())
-        out.write(mask)
-        out.write(masked)
-        return out.toByteArray()
+        return encodeMasked(OPCODE_TEXT, data)
     }
 
     /** Builds a masked close frame (status 1000) with an optional reason. */
@@ -53,23 +42,42 @@ object WsCodec {
     private fun encodeMasked(opcode: Int, data: ByteArray): ByteArray {
         val mask = ByteArray(4).also { java.security.SecureRandom().nextBytes(it) }
         val masked = ByteArray(data.size) { i -> (data[i].toInt() xor mask[i % 4].toInt()).toByte() }
-        val header = mutableListOf<Byte>()
-        header += (0x80 or opcode).toByte()
-        header += lengthByte(data.size, masked = true)
-        val out = java.io.ByteArrayOutputStream(header.size + 4 + masked.size)
-        out.write(header.toByteArray())
+        val lengthField = lengthFieldBytes(data.size, masked = true)
+        val out = java.io.ByteArrayOutputStream(1 + lengthField.size + 4 + masked.size)
+        out.write((0x80 or opcode).toByte())
+        out.write(lengthField)
         out.write(mask)
         out.write(masked)
         return out.toByteArray()
     }
 
-    private fun lengthByte(length: Int, masked: Boolean): Byte {
+    /**
+     * The full payload-length field: the 7-bit indicator byte plus any
+     * extended-length bytes. Writing only the indicator (a bug the tests
+     * caught) produces malformed frames for payloads of 126 bytes or more.
+     */
+    internal fun lengthFieldBytes(length: Int, masked: Boolean): ByteArray {
         require(length <= 0xFFFF) { "payload too large for this codec" }
         val maskBit = if (masked) 0x80 else 0x00
         return when {
-            length < 126 -> (maskBit or length).toByte()
-            length <= 0xFFFF -> (maskBit or 126).toByte()
-            else -> (maskBit or 127).toByte()
+            length < 126 -> byteArrayOf((maskBit or length).toByte())
+
+            length <= 0xFFFF -> byteArrayOf(
+                (maskBit or 126).toByte(),
+                ((length shr 8) and 0xFF).toByte(),
+                (length and 0xFF).toByte(),
+            )
+
+            else -> {
+                val bytes = ByteArray(9)
+                bytes[0] = (maskBit or 127).toByte()
+                var value = length.toLong()
+                for (i in 8 downTo 1) {
+                    bytes[i] = (value and 0xFF).toByte()
+                    value = value shr 8
+                }
+                bytes
+            }
         }
     }
 
